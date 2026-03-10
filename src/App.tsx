@@ -11,13 +11,26 @@ function App() {
 
     setLoading(true)
 
-    // zatial len fake answer, backend napojime neskor
-    setTimeout(() => {
-      setAnswer(`Demo answer for: ${question}`)
-      setLoading(false)
-    }, 700)
-  }
+    try {
+      const res = await fetch("http://localhost:3334/ask", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ question })
+      })
 
+      const data = await res.json()
+
+      setAnswer(data.answer)
+    } catch (err) {
+      console.error(err)
+      setAnswer("Error contacting server.")
+    }
+
+    setLoading(false)
+  }
+  
   return (
     <div className="app">
       <div className="card">

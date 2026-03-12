@@ -53,6 +53,7 @@ button {
   border: none;
   border-radius: 12px;
   padding: 12px 18px;
+  margin-top: 4px;
   font-size: 16px;
   cursor: pointer;
   background: #111827;

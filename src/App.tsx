@@ -13,6 +13,13 @@ function App() {
   const [seenIds, setSeenIds] = useState([])
   const [loading, setLoading] = useState(false)
 
+  const [model, setModel] = useState("")
+  const [cost, setCost] = useState(0)
+  const [usage, setUsage] = useState<{input_tokens:number, output_tokens:number} | null>(null)
+  const [sessionCost, setSessionCost] = useState(
+    Number(localStorage.getItem("sessionCost") || 0)
+  )
+
   const handleAsk = async () => {
     if (!question.trim()) return
 
@@ -31,6 +38,18 @@ function App() {
       })
 
       const data = await res.json()
+
+      //cost logic
+      setModel(data.model || "")
+      setCost(data.cost || 0)
+      setUsage(data.usage || null)
+
+      // session cost
+      const prev = Number(localStorage.getItem("sessionCost") || 0)
+      const newTotal = prev + (data.cost || 0)
+
+      localStorage.setItem("sessionCost", newTotal.toString())
+      setSessionCost(newTotal)
 
       setAnswer(data.answer || "")
       setRetrievedNodes(data.retrievedNodes || [])
@@ -66,6 +85,7 @@ function App() {
           <h2>Answer</h2>
           <p>{answer || "No answer yet."}</p>
         </div>
+        
 
         <div className="answerBox">
           <h2>Retrieved nodes</h2>
@@ -79,6 +99,38 @@ function App() {
                 </li>
               ))}
             </ul>
+          )}
+        </div>
+
+        <div className="answerBox">
+          <h2>Model Info</h2>
+          <p>
+            <strong>Model:</strong> {model || "Unknown"}
+          </p>
+          <p>
+            <strong>Request cost:</strong> ${cost.toFixed(6)}
+          </p>
+          <p>
+            <strong>Total local spend:</strong> ${sessionCost.toFixed(6)}
+          </p>
+          <button
+            onClick={() => {
+              localStorage.removeItem("sessionCost")
+              setSessionCost(0)
+            }}
+          >
+            Reset Session Cost
+          </button>
+
+          {usage && (
+            <>
+              <p>
+                <strong>Input tokens:</strong> {usage.input_tokens}
+              </p>
+              <p>
+                <strong>Output tokens:</strong> {usage.output_tokens}
+              </p>
+            </>
           )}
         </div>
 

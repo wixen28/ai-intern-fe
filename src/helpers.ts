@@ -1,22 +1,9 @@
 export function formatMoneyParts(dollars: number) {
-  if (dollars < 1) {
-    const cents = dollars * 100
-    const full = cents.toFixed(4)
-    const [main, decimals = "00"] = full.split(".")
-
-    return {
-      unit: "¢",
-      main,
-      decimals: decimals.slice(0, 2)
-    }
-  }
-
   const full = dollars.toFixed(4)
-  const [main, decimals = "00"] = full.split(".")
+  const [whole, decimals = "0000"] = full.split(".")
 
   return {
-    unit: "$",
-    main,
-    decimals: decimals.slice(0, 2)
+    main: `$${whole}.${decimals.slice(0, 2)}`,
+    subtle: decimals.slice(2, 4)
   }
 }

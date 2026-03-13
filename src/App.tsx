@@ -128,24 +128,20 @@ function App() {
           <p>
             <strong>Request cost:</strong>{" "}
             <span>
-              {requestCostParts.unit === "$" ? "$" : ""}
               {requestCostParts.main}
               <span style={{ opacity: 0.5, fontSize: "0.85em" }}>
-                .{requestCostParts.decimals}
+                {requestCostParts.subtle}
               </span>
-              {requestCostParts.unit === "¢" ? "¢" : ""}
             </span>
           </p>
 
           <p>
             <strong>Total local spend:</strong>{" "}
             <span>
-              {sessionCostParts.unit === "$" ? "$" : ""}
               {sessionCostParts.main}
               <span style={{ opacity: 0.5, fontSize: "0.85em" }}>
-                .{sessionCostParts.decimals}
+                {sessionCostParts.subtle}
               </span>
-              {sessionCostParts.unit === "¢" ? "¢" : ""}
             </span>
           </p>
           <button

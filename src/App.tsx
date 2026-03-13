@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { formatMoneyParts } from "./helpers"
 import "./App.css"
 
 type Node = {
@@ -8,23 +9,28 @@ type Node = {
 
 function App() {
   const [question, setQuestion] = useState("")
-  const [answer, setAnswer] = useState("")
+  const [answerBullets, setAnswerBullets] = useState<string[]>([])
+  const [sourceNodeIds, setSourceNodeIds] = useState<number[]>([])
   const [retrievedNodes, setRetrievedNodes] = useState<Node[]>([])
-  const [seenIds, setSeenIds] = useState([])
+  const [seenIds, setSeenIds] = useState<number[]>([])
   const [loading, setLoading] = useState(false)
 
   const [model, setModel] = useState("")
   const [cost, setCost] = useState(0)
-  const [usage, setUsage] = useState<{input_tokens:number, output_tokens:number} | null>(null)
+  const [usage, setUsage] = useState<{ input_tokens: number; output_tokens: number } | null>(null)
   const [sessionCost, setSessionCost] = useState(
     Number(localStorage.getItem("sessionCost") || 0)
   )
+
+  const requestCostParts = formatMoneyParts(cost)
+  const sessionCostParts = formatMoneyParts(sessionCost)
 
   const handleAsk = async () => {
     if (!question.trim()) return
 
     setLoading(true)
-    setAnswer("")
+    setAnswerBullets([])
+    setSourceNodeIds([])
     setRetrievedNodes([])
     setSeenIds([])
 
@@ -39,24 +45,24 @@ function App() {
 
       const data = await res.json()
 
-      //cost logic
       setModel(data.model || "")
       setCost(data.cost || 0)
       setUsage(data.usage || null)
 
-      // session cost
       const prev = Number(localStorage.getItem("sessionCost") || 0)
       const newTotal = prev + (data.cost || 0)
 
       localStorage.setItem("sessionCost", newTotal.toString())
       setSessionCost(newTotal)
 
-      setAnswer(data.answer || "")
+      setAnswerBullets(data.answerBullets || [])
+      setSourceNodeIds(data.sourceNodeIds || [])
       setRetrievedNodes(data.retrievedNodes || [])
       setSeenIds(data.seenIds || [])
     } catch (err) {
       console.error(err)
-      setAnswer("Error contacting server.")
+      setAnswerBullets(["Error contacting server."])
+      setSourceNodeIds([])
       setRetrievedNodes([])
       setSeenIds([])
     }
@@ -83,9 +89,21 @@ function App() {
 
         <div className="answerBox">
           <h2>Answer</h2>
-          <p>{answer || "No answer yet."}</p>
+          {answerBullets.length === 0 ? (
+            <p>No answer yet.</p>
+          ) : (
+            <ul>
+              {answerBullets.map((bullet, index) => (
+                <li key={index}>{bullet}</li>
+              ))}
+            </ul>
+          )}
         </div>
-        
+
+        <div className="answerBox">
+          <h2>Source Node IDs</h2>
+          <p>{sourceNodeIds.length ? sourceNodeIds.join(", ") : "None"}</p>
+        </div>
 
         <div className="answerBox">
           <h2>Retrieved nodes</h2>
@@ -108,10 +126,27 @@ function App() {
             <strong>Model:</strong> {model || "Unknown"}
           </p>
           <p>
-            <strong>Request cost:</strong> ${cost.toFixed(6)}
+            <strong>Request cost:</strong>{" "}
+            <span>
+              {requestCostParts.unit === "$" ? "$" : ""}
+              {requestCostParts.main}
+              <span style={{ opacity: 0.5, fontSize: "0.85em" }}>
+                .{requestCostParts.decimals}
+              </span>
+              {requestCostParts.unit === "¢" ? "¢" : ""}
+            </span>
           </p>
+
           <p>
-            <strong>Total local spend:</strong> ${sessionCost.toFixed(6)}
+            <strong>Total local spend:</strong>{" "}
+            <span>
+              {sessionCostParts.unit === "$" ? "$" : ""}
+              {sessionCostParts.main}
+              <span style={{ opacity: 0.5, fontSize: "0.85em" }}>
+                .{sessionCostParts.decimals}
+              </span>
+              {sessionCostParts.unit === "¢" ? "¢" : ""}
+            </span>
           </p>
           <button
             onClick={() => {
